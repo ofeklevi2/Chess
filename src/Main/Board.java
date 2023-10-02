@@ -22,6 +22,8 @@ public class Board extends JPanel {
 
     public int enPassantTile = -1;
 
+    public CheckScanner checkScanner = new CheckScanner(this);
+
     public Board(){
         this.setPreferredSize(new Dimension(cols * tileSize, rows * tileSize));
 
@@ -49,6 +51,9 @@ public class Board extends JPanel {
         if (move.piece.name.equals("Pawn")){
             movePawn(move);
         }
+        else if (move.piece.name.equals("King")){
+            moveKing(move);
+        }
 
             move.piece.col = move.newCol;
             move.piece.row = move.newRow;
@@ -58,6 +63,25 @@ public class Board extends JPanel {
             move.piece.isFirstMove = false;
 
             capture(move.capture);
+    }
+
+    private void moveKing(Move move){
+
+        // if you are trying to castle
+        if (Math.abs(move.piece.col - move.newCol) == 2){
+            Piece rook;
+            //if you are trying to castle to the king side
+            if (move.piece.col < move.newCol){
+                rook = getPiece(7, move.piece.row);
+                rook.col = 5;
+            }
+            //else you are trying to castle to the opposite king side
+            else{
+                rook = getPiece(0, move.piece.row);
+                rook.col = 3;
+            }
+            rook.xPos = rook.col * tileSize;
+        }
     }
 
     private void movePawn(Move move) {
@@ -136,6 +160,9 @@ public class Board extends JPanel {
         if (move.piece.moveCollidesWithPiece(move.newCol, move.newRow)){
             return false;
         }
+        if (checkScanner.isKingChecked(move)){
+            return false;
+        }
 
         return true;
     }
@@ -155,6 +182,20 @@ public class Board extends JPanel {
      */
     public int getTileNum(int col, int row){
         return row * cols + col;
+    }
+
+    /**
+     * This method is being called by CheckScanner.isKingChecked()
+     * @param isWhite
+     * @return
+     */
+    Piece findKing(boolean isWhite){
+        for (Piece piece : pieceList){
+            if (piece.isWhite == isWhite && piece.name.equals("King")){
+                return piece;
+            }
+        }
+        return null;
     }
 
     /**
